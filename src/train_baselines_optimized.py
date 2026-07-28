@@ -55,7 +55,7 @@ LR          = 2e-5
 WARMUP_FRAC = 0.06
 GRAD_ACCUM  = 2
 PATIENCE    = 1
-BASE_DIR    = Path("/kaggle/working/cot-compliance-safety/data")
+BASE_DIR    = Path("/data")
 OUT_DIR     = BASE_DIR / "baselines"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
