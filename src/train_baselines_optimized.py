@@ -55,7 +55,7 @@ LR          = 2e-5
 WARMUP_FRAC = 0.06
 GRAD_ACCUM  = 2
 PATIENCE    = 1
-BASE_DIR    = Path("/data")
+BASE_DIR    = Path("/kaggle/working/cot-compliance-safety/data")
 OUT_DIR     = BASE_DIR / "baselines"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -172,10 +172,31 @@ def evaluate_amp(model, loader, loss_fn, label="eval"):
           target_names=[ID2QUAD[i] for i in range(NUM_LABELS)], zero_division=0))
     return total_loss / len(loader), macro_f1, q3_f1
 
+def maybe_resume(model_name):
+    out = OUT_DIR / model_name
+    results_file = out / "results.json"
+
+    if model_name in {"tfidf_lr", "zeroshot_qwen"}:
+        if results_file.exists():
+            print(f"Skipping {model_name}")
+            with open(results_file) as f:
+                return json.load(f)
+        return None
+
+    if results_file.exists() and (out / "best").exists():
+        print(f"Skipping {model_name}")
+        with open(results_file) as f:
+            return json.load(f)
+
+    return None
+
 # ── 6. Generic fine-tuning runner ─────────────────────────────────────────────
 def train_hf(name, hf_id, rows_tr, rows_val, rows_te,
              max_len, batch_size, epochs, gradient_checkpointing=False):
     t0 = time.time()
+    cached = maybe_resume(name)
+    if cached is not None:
+        return cached
     print(f"\n{'='*65}\n  {name}  |  max_len={max_len}  bs={batch_size}  epochs={epochs}\n{'='*65}")
     out = OUT_DIR / name; out.mkdir(exist_ok=True)
 
@@ -230,6 +251,9 @@ def train_hf(name, hf_id, rows_tr, rows_val, rows_te,
 
 # ── 7. TF-IDF + Logistic Regression ──────────────────────────────────────────
 def run_tfidf(rows_tr, rows_val, rows_te):
+    cached = maybe_resume("tfidf_lr")
+    if cached is not None:
+        return cached
     t0 = time.time()
     print(f"\n{'='*65}\n  TF-IDF + Logistic Regression\n{'='*65}")
     out = OUT_DIR / "tfidf_lr"; out.mkdir(exist_ok=True)
@@ -274,6 +298,9 @@ ZEROSHOT_SYS = (
 )
 
 def run_zeroshot_qwen(rows_te):
+    cached = maybe_resume("zeroshot_qwen")
+    if cached is not None:
+        return cached
     import re
     t0 = time.time()
     print(f"\n{'='*65}\n  Zero-shot Qwen2.5-7B  (no fine-tuning — inference only)\n{'='*65}")
