@@ -20,7 +20,7 @@ if not hasattr(torch.nn.Module, "set_submodule"):
         setattr(curr, target_attr, module)
     torch.nn.Module.set_submodule = _set_submodule
 
-from config import RAW_DIR, BNB_4BIT
+from config import BNB_4BIT, batch_dirs
 
 JUDGE_MODEL = "Qwen/Qwen2.5-7B-Instruct"
 
@@ -66,7 +66,8 @@ def main():
                     help="model keys, e.g. deepseek-r1-7b deepseek-r1-8b deepseek-r1-14b qwen3-14b")
     ap.add_argument("--judge", default=JUDGE_MODEL, help="HF model ID to use as judge")
     ap.add_argument("--max-cot-chars", type=int, default=12000)
-    ap.add_argument("--batch", type=int, default=8, help="Batch size for faster evaluation")
+    ap.add_argument("--batch", required=True, choices=["with_attacks", "without_attacks"], help="Which batch to label")
+    ap.add_argument("--gen-batch", type=int, default=8, help="Batch size for faster evaluation")
     args = ap.parse_args()
 
     # Load the tokenizer and judge model in 4-bit
@@ -81,9 +82,10 @@ def main():
         args.judge, quantization_config=bnb, device_map="auto", torch_dtype=torch.float16)
     model.eval()
 
+    dirs = batch_dirs(args.batch)
     for mkey in args.models:
-        src = os.path.join(str(RAW_DIR), f"generations_{mkey}.jsonl")
-        out = os.path.join(str(RAW_DIR), f"labels_cot_{mkey}.jsonl")
+        src = dirs["generations"] / f"generations_{mkey}.jsonl"
+        out = dirs["cot"] / f"labels_cot_{mkey}.jsonl"
         if not os.path.exists(src):
             print(f"[skip] {src} not found")
             continue
@@ -96,8 +98,8 @@ def main():
             continue
 
         with open(out, "a") as f:
-            for i in range(0, len(todo), args.batch):
-                chunk = todo[i:i + args.batch]
+            for i in range(0, len(todo), args.gen_batch):
+                chunk = todo[i:i + args.gen_batch]
                 prompts = [
                     tok.apply_chat_template(
                         [
@@ -129,7 +131,7 @@ def main():
                 f.flush()
                 
                 last_lab, last_reason = parse(dec[-1])
-                print(f"[{mkey}] labeled {min(i + args.batch, len(todo))}/{len(todo)} | Verdict: {last_lab} ({last_reason})")
+                print(f"[{mkey}] labeled {min(i + args.gen_batch, len(todo))}/{len(todo)} | Verdict: {last_lab} ({last_reason})")
 
         print(f"[{mkey}] wrote -> {out}")
 

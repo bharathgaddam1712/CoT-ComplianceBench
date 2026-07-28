@@ -5,5 +5,4 @@ datasets>=2.19
 torch
 # labeling (optional): hosted 70B CoT judge
 together
-vllm==0.6.3.post1
 scikit-learn

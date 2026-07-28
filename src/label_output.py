@@ -21,7 +21,7 @@ if not hasattr(torch.nn.Module, "set_submodule"):
         setattr(curr, target_attr, module)
     torch.nn.Module.set_submodule = _set_submodule
 
-from config import RAW_DIR, BNB_4BIT
+from config import BNB_4BIT, batch_dirs
 
 JUDGE_MODEL = "Qwen/Qwen2.5-7B-Instruct"
 
@@ -109,12 +109,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--models", nargs="+", required=True,
                     help="model keys, e.g. deepseek-r1-7b deepseek-r1-8b")
+    ap.add_argument("--batch", required=True, choices=["with_attacks", "without_attacks"],
+                    help="which batch to label -- selects generations/ source and final/ output dirs")
     ap.add_argument("--judge", default=JUDGE_MODEL,
                     help="HF model ID to use as judge")
     ap.add_argument("--max-resp-chars", type=int, default=6000,
                     help="Max chars of response to feed to judge (avoids OOM)")
-    ap.add_argument("--batch", type=int, default=8,
-                    help="Batch size for inference")
+    ap.add_argument("--gen-batch", type=int, default=8,
+                    help="generation batch size (renamed from --batch to avoid clashing "
+                         "with the with_attacks/without_attacks --batch flag above)")
     args = ap.parse_args()
 
     # Load tokenizer and model once, reuse for all target models
@@ -131,9 +134,10 @@ def main():
     model.eval()
     print("Judge model loaded successfully.\n")
 
+    dirs = batch_dirs(args.batch)
     for mkey in args.models:
-        src = os.path.join(str(RAW_DIR), f"generations_{mkey}.jsonl")
-        out = os.path.join(str(RAW_DIR), f"labels_output_{mkey}.jsonl")
+        src = os.path.join(str(dirs["generations"]), f"generations_{mkey}.jsonl")
+        out = os.path.join(str(dirs["final"]), f"labels_output_{mkey}.jsonl")
         if not os.path.exists(src):
             print(f"[skip] {src} not found")
             continue
@@ -147,8 +151,8 @@ def main():
             continue
 
         with open(out, "a") as f:
-            for i in range(0, len(todo), args.batch):
-                chunk = todo[i:i + args.batch]
+            for i in range(0, len(todo), args.gen_batch):
+                chunk = todo[i:i + args.gen_batch]
 
                 # Build chat-template prompts for each row in the batch
                 prompts = []
@@ -203,7 +207,7 @@ def main():
 
                     # Progress log with last verdict
                     last_lab, last_reason = parse(dec[-1])
-                    done_so_far = min(i + args.batch, len(todo))
+                    done_so_far = min(i + args.gen_batch, len(todo))
                     print(f"[{mkey}] labeled {done_so_far}/{len(todo)} "
                           f"| Verdict: {last_lab} ({last_reason})")
 

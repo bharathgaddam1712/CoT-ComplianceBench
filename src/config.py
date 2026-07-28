@@ -20,10 +20,21 @@ def _base_dir() -> Path:
 
 BASE     = _base_dir()
 DATA_DIR = BASE / "data"
-RAW_DIR  = DATA_DIR / "raw"
 JOB_LIST = DATA_DIR / "job_list.jsonl"
-for _d in (RAW_DIR,):
-    _d.mkdir(parents=True, exist_ok=True)
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+def batch_dirs(batch: str):
+    """Return dictionary of directories for a given batch (e.g., 'with_attacks'), creating them if needed."""
+    bdir = DATA_DIR / batch
+    dirs = {
+        "generations": bdir / "generations",
+        "cot": bdir / "cot",
+        "final": bdir / "final",
+        "labeled": bdir / "labeled"
+    }
+    for d in dirs.values():
+        d.mkdir(parents=True, exist_ok=True)
+    return dirs
 
 SEED = 42
 
