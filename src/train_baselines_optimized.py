@@ -391,7 +391,7 @@ if __name__ == "__main__":
                              rows_tr, rows_val, rows_te, 2048,  8, 3,
                              gradient_checkpointing=True))
     results.append(train_hf("modernbert_base", "answerdotai/ModernBERT-base",
-                             rows_tr, rows_val, rows_te, 2048, 16, 3))
+                             rows_tr, rows_val, rows_te, 2048, 16, 3, gradient_checkpointing=True))
     results.append(run_zeroshot_qwen(rows_te))
 
     print(f"\nAll done in {(time.time()-t_total)/60:.1f} min")
