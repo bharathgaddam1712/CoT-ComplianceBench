@@ -186,7 +186,8 @@ def train_hf(name, hf_id, rows_tr, rows_val, rows_te,
         hf_id, num_labels=NUM_LABELS, ignore_mismatched_sizes=True)
     if gradient_checkpointing and hasattr(model, "gradient_checkpointing_enable"):
         model.gradient_checkpointing_enable()
-    if N_GPUS > 1: model = nn.DataParallel(model)
+    use_dp = ( N_GPUS > 1 and "modernbert" not in hf_id.lower())
+    if use_dp: model = nn.DataParallel(model)
     model = model.to(device)
 
     tr_loader, val_loader, te_loader = make_loaders(
@@ -215,7 +216,7 @@ def train_hf(name, hf_id, rows_tr, rows_val, rows_te,
                 print("  early stopping"); break
 
     best_m = AutoModelForSequenceClassification.from_pretrained(out / "best").to(device)
-    if N_GPUS > 1: best_m = nn.DataParallel(best_m)
+    if use_dp: best_m = nn.DataParallel(best_m)
     _, test_macro, test_q3 = evaluate_amp(best_m, te_loader, loss_fn, "test")
 
     elapsed = round((time.time() - t0) / 60, 1)
