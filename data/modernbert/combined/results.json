@@ -1,0 +1,12 @@
+{
+  "batch": "combined",
+  "base_model": "answerdotai/ModernBERT-base",
+  "max_seq_len": 2048,
+  "epochs": 3,
+  "best_val_f1": 0.6306613105126342,
+  "test_macro_f1": 0.6213386525430574,
+  "test_q3_f1": 0.3981042654028436,
+  "train_size": 12897,
+  "val_size": 1612,
+  "test_size": 1613
+}
