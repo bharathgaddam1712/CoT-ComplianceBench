@@ -1,0 +1,56 @@
+[
+    {
+        "model": "tfidf_lr",
+        "hf_id": "sklearn",
+        "max_seq_len": 3000,
+        "best_val_f1": 0.5719626107131801,
+        "test_macro_f1": 0.6035540462054373,
+        "test_q3_f1": 0.3651452282157676,
+        "elapsed_min": 0.3
+    },
+    {
+        "model": "bert_base",
+        "hf_id": "bert-base-uncased",
+        "max_seq_len": 512,
+        "best_val_f1": 0.504880849738235,
+        "test_macro_f1": 0.5448947088269236,
+        "test_q3_f1": 0.32525951557093424,
+        "elapsed_min": 7.7
+    },
+    {
+        "model": "roberta_base",
+        "hf_id": "roberta-base",
+        "max_seq_len": 512,
+        "best_val_f1": 0.525827819341131,
+        "test_macro_f1": 0.5689407951783605,
+        "test_q3_f1": 0.3247232472324723,
+        "elapsed_min": 7.8
+    },
+    {
+        "model": "longformer_base",
+        "hf_id": "allenai/longformer-base-4096",
+        "max_seq_len": 2048,
+        "best_val_f1": 0.5977261850343932,
+        "test_macro_f1": 0.6183174502598567,
+        "test_q3_f1": 0.4444444444444444,
+        "elapsed_min": 237.6
+    },
+    {
+        "model": "modernbert_base",
+        "hf_id": "answerdotai/ModernBERT-base",
+        "max_seq_len": 2048,
+        "best_val_f1": 0.5765229484555464,
+        "test_macro_f1": 0.5788323003116769,
+        "test_q3_f1": 0.3233082706766917,
+        "elapsed_min": 151.6
+    },
+    {
+        "model": "zeroshot_qwen2.5-7b",
+        "hf_id": "Qwen/Qwen2.5-7B-Instruct",
+        "max_seq_len": 5000,
+        "best_val_f1": null,
+        "test_macro_f1": 0.24681207794422422,
+        "test_q3_f1": 0.16993464052287582,
+        "elapsed_min": 41.6
+    }
+]
