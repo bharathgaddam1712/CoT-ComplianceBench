@@ -1,0 +1,30 @@
+name: Human audit checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Test sampling and scoring
+        run: python -m unittest discover -s tests -v
+      - name: Prepare reproducible review packet
+        run: python scripts/human_audit.py prepare --output audit_runs/ci
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependencies
+        run: npm install --no-save --package-lock=false playwright@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Check reviewer workflow
+        run: node tests/test_audit_browser.cjs audit_runs/ci/review.html

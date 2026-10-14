@@ -9,3 +9,7 @@ __pycache__/
 .env
 *.pat
 pat-token
+
+# Local human-review materials and annotations
+audit_runs/
+node_modules/

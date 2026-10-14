@@ -1,8 +1,38 @@
-# CoT-ComplianceBench — Dataset Build
+# CoT-ComplianceBench
+
+Research code for auditing safety divergence between reasoning traces and final
+answers in open reasoning models. The project provides dataset generation,
+dual-channel labeling, and a blinded human-validation workflow.
+
+- [Dataset on Hugging Face](https://huggingface.co/datasets/BharathGaddam/CoT-ComplianceBench)
+- [Existing monitor checkpoint](https://huggingface.co/BharathGaddam/CoT-ComplianceBench-Monitor)
+- [Human audit protocol](docs/HUMAN_AUDIT.md)
 
 A resumable, free-tier-first pipeline for generating a Chain-of-Thought safety
 dataset from reasoning LLMs. Built to run on free **Colab** and **Kaggle** GPUs
 (T4 / P100, 16 GB) using 4-bit quantization.
+
+## Human-label validation
+
+The blinded human-label audit is documented in [docs/HUMAN_AUDIT.md](docs/HUMAN_AUDIT.md).
+Prepare the frozen review packet with `python scripts/human_audit.py prepare --output audit_runs/study_v1`.
+Human reliability results are pending; the automated labels have not yet been
+validated by this audit. Review packets and annotations are excluded from Git.
+
+Python 3.10+ is sufficient for the audit; it needs no GPU, API key, or additional
+Python packages. Open the generated `audit_runs/study_v1/review.html`, and send
+the same file to both independent reviewers using separate browser profiles.
+The file in `scripts/` is a template, not a review packet.
+
+```sh
+python -m unittest discover -s tests -v
+```
+
+The audit is the first validation step. Statistical analysis and paper revisions
+remain pending; current automated labels do not establish human-confirmed safety
+rates. The `without_attacks` data contain raw harmful prompts, not harmless benign
+controls. Model-group comparisons are descriptive, not causal evidence about
+training methods.
 
 ## Design principles
 
@@ -46,8 +76,8 @@ src/smoke_test.py  3-prompt end-to-end sanity check (run before real GPU spend)
 ## Quickstart (Colab — Google Drive for persistence)
 
 ```python
-!git clone https://github.com/bharathgaddam1712/COT-COMPLIANCE-SAFETY.git
-%cd COT-COMPLIANCE-SAFETY
+!git clone https://github.com/bharathgaddam1712/CoT-ComplianceBench.git
+%cd CoT-ComplianceBench
 from google.colab import drive; drive.mount('/content/drive')   # persistent data
 !pip -q install -r requirements.txt
 
@@ -71,8 +101,8 @@ from google.colab import drive; drive.mount('/content/drive')   # persistent dat
 ## Quickstart (Kaggle — `/kaggle/working` for persistence)
 
 ```python
-!git clone https://github.com/bharathgaddam1712/COT-COMPLIANCE-SAFETY.git
-%cd COT-COMPLIANCE-SAFETY
+!git clone https://github.com/bharathgaddam1712/CoT-ComplianceBench.git
+%cd CoT-ComplianceBench
 !pip -q install -r requirements.txt
 
 # Pick ONE model per notebook session
@@ -127,6 +157,10 @@ output-only safety systems.
 
 ## Notes
 
+- The labeling instructions below describe the legacy `src/labeling.py` path.
+  The repository also includes local labeling scripts with Qwen2.5-7B defaults.
+  Script defaults alone do not establish which judge produced existing labels;
+  reconcile run provenance before reporting the final paper methodology.
 - **Run `sampling.py` on one platform only**, then reuse the same `job_list.jsonl`
   everywhere so IDs match and the merge is clean.
 - The CoT judge (70B) in `labeling.py` uses a hosted API — set `TOGETHER_API_KEY`.
